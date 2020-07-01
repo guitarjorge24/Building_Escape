@@ -19,7 +19,7 @@ void UOpenDoor::BeginPlay()
 	Super::BeginPlay();
 	InitialYaw = GetOwner()->GetActorRotation().Yaw;
 	CurrentYaw = InitialYaw;
-	TargetYaw += InitialYaw;
+	OpenAngle += InitialYaw;
 
 	if (!PressurePlate)
 	{
@@ -73,14 +73,14 @@ void UOpenDoor::OpenDoor(float DeltaTime)
 	// returns a normalized rotation that ranges form -180 to 180. When an actor's rotation goes above 180 degrees, 
 	// such as 181, instead of returning 181 it returns -180
 	CurrentYaw = GetOwner()->GetActorRotation().GetDenormalized().Yaw;
-	FRotator DoorRotation(0.f, FMath::Lerp(CurrentYaw, TargetYaw, 1.f * DeltaTime), 0.f);
+	FRotator DoorRotation(0.f, FMath::Lerp(CurrentYaw, OpenAngle, DoorOpenSpeed * DeltaTime), 0.f);
 	GetOwner()->SetActorRotation(DoorRotation);
 }
 
 void UOpenDoor::CloseDoor(float DeltaTime)
 {
 	CurrentYaw = GetOwner()->GetActorRotation().GetDenormalized().Yaw;
-	FRotator DoorRotation(0.f, FMath::Lerp(CurrentYaw, InitialYaw, 3.f * DeltaTime), 0.f);
+	FRotator DoorRotation(0.f, FMath::Lerp(CurrentYaw, InitialYaw, DoorCloseSpeed * DeltaTime), 0.f);
 	GetOwner()->SetActorRotation(DoorRotation);
 }
 
