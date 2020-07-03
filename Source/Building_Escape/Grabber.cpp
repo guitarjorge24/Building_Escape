@@ -1,7 +1,8 @@
 // Copyright Jorge Luque 2020
 
-#include "GameFramework/PlayerController.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "Grabber.h"
 
 #define OUT
@@ -31,9 +32,45 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 		OUT PlayerViewPointRotation
 	);
 
-	UE_LOG(LogTemp, Warning, TEXT(" \nPlayerViewPointLocation: %s \nPlayerViewPointRotation: %s"), 
-		*PlayerViewPointLocation.ToString(), 
-		*PlayerViewPointRotation.ToString()
+
+
+	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
+
+	// Debug showing normalized rotation vector
+	//UE_LOG(LogTemp, Warning, TEXT(" \nViewPoint Location: %s \nViewPoint Rotation: %s"
+	//								"\nRotationVector: %s \nLineTraceEnd: %s"),
+	//	*PlayerViewPointLocation.ToString(), *PlayerViewPointRotation.ToString(),
+	//	*PlayerViewPointRotation.Vector().ToString(), *LineTraceEnd.ToString()
+	//);
+
+	DrawDebugLine(
+		GetWorld(),
+		PlayerViewPointLocation,
+		LineTraceEnd,
+		FColor(0,255,0),
+		false,
+		0.f,
+		0,
+		5.f
 	);
+
+	FHitResult Hit;
+	FCollisionQueryParams TraceParams(FName(TEXT("")), false, GetOwner());
+
+	GetWorld()->LineTraceSingleByObjectType(
+		OUT Hit,
+		PlayerViewPointLocation,
+		LineTraceEnd,
+		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
+		TraceParams
+		);
+
+	AActor* ActorHit = Hit.GetActor();
+
+	if (ActorHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Line trace has hit: %s"), *ActorHit->GetName());
+	}
+	
 }
 
