@@ -25,7 +25,7 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
-	float Reach = 200.f;
+	float GrabReachDistance = 200.f;
 	UPhysicsHandleComponent* PhysicsHandle = nullptr;
 	UInputComponent* InputComponent = nullptr;
 
@@ -34,5 +34,11 @@ private:
 	void GrabRelease();
 	void SetupInputComponent();
 	FHitResult GetFirstPhysicsBodyInReach();
-	void DrawDebugLineTrace(const FVector& PlayerViewPointLocation, const FRotator& PlayerViewPointRotation, const FVector& LineTraceEnd) const;
+	void DrawDebugLineTrace() const;
+
+	// Get player position in world
+	FVector GetPlayerWorldPosition() const;
+
+	// Return the end point of the LineTrace used to grab objects
+	FVector GetGrabReachEndpoint() const;
 };
