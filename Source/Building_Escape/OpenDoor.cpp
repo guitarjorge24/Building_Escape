@@ -2,9 +2,12 @@
 
 
 #include "OpenDoor.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/World.h" 
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
+
+#define OUT
 
 UOpenDoor::UOpenDoor()
 {
@@ -37,7 +40,8 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// Check if PressurePlate is null before trying to dereference it to avoid crash.
 	// Trying to dereference a null pointer will likely result in a crash.
-	if (PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens))
+	//if (PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens))
+	if(PressurePlate && TotalMassOfActors() > MassToOpenDoor)
 	{
 		OpenDoor(DeltaTime);
 		DoorLastOpened = GetWorld()->GetTimeSeconds();
@@ -82,5 +86,28 @@ void UOpenDoor::CloseDoor(float DeltaTime)
 	CurrentYaw = GetOwner()->GetActorRotation().GetDenormalized().Yaw;
 	FRotator DoorRotation(0.f, FMath::Lerp(CurrentYaw, InitialYaw, DoorCloseSpeed * DeltaTime), 0.f);
 	GetOwner()->SetActorRotation(DoorRotation);
+}
+
+float UOpenDoor::TotalMassOfActors() const
+{
+	float TotalMass = 0.f;
+
+	// Find all overlapping actors
+	TArray<AActor*> OverlappingActors;
+	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
+
+	// Add up all their masses
+	for (AActor* ActorPointer: OverlappingActors)
+	{
+		TotalMass += ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		
+		// #Debug: Log the mass of what's on the pressure plate
+		UE_LOG(LogTemp, Warning, TEXT("%s from %s has a mass of %f kg"), 
+			*ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetName(),
+			*ActorPointer->GetName(),
+			ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass());
+	}
+
+	return TotalMass;
 }
 
