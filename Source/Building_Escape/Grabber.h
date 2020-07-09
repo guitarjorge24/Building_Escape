@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Grabber.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -26,7 +25,7 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	float GrabReachDistance = 200.f;
-	UPhysicsHandleComponent* PhysicsHandle = nullptr;
+	class UPhysicsHandleComponent* PhysicsHandle = nullptr;
 	UInputComponent* InputComponent = nullptr;
 
 	void FindPhysicsHandle();

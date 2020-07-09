@@ -1,8 +1,8 @@
 // Copyright Jorge Luque 2020 All Rights Reserved
 
-
 #include "OpenDoor.h"
 #include "Components/PrimitiveComponent.h"
+#include "Engine/TriggerVolume.h"
 #include "Engine/World.h" 
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
@@ -40,7 +40,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// Check if PressurePlate is null before trying to dereference it to avoid crash.
 	// Trying to dereference a null pointer will likely result in a crash.
-	//if (PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens))
+	//if (PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens)) // Old way of opening door when a specific actor steps on the pressure plate
 	if(PressurePlate && TotalMassOfActors() > MassToOpenDoor)
 	{
 		OpenDoor(DeltaTime);
@@ -58,18 +58,10 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 void UOpenDoor::OpenDoor(float DeltaTime)
 {
-	// Debug Logs:
-	// UE_LOG(LogTemp, Warning, TEXT("Current Rotation: %s"), *GetOwner()->GetActorRotation().ToString());
-	// UE_LOG(LogTemp, Warning, TEXT("Current Rotation.Yaw: %f"), GetOwner()->GetActorRotation().Yaw);
-	// UE_LOG(LogTemp, Warning, TEXT("CurrentYaw: %f"), CurrentYaw);
-	// UE_LOG(LogTemp, Warning, TEXT("TargetYaw: %f"), TargetYaw);
-	// UE_LOG(LogTemp, Warning, TEXT("Lerp: %f"), CurrentYaw);
-
 	// The way instructor did it:
 	// CurrentYaw = FMath::Lerp(CurrentYaw, TargetYaw, 0.01f);
 	// FRotator DoorRotation = GetOwner()->GetActorRotation();
 	// DoorRotation.Yaw = CurrentYaw;
-	// UE_LOG(LogTemp, Warning, TEXT("DoorRotation: %s"), *DoorRotation.ToString());
 	// GetOwner()->SetActorRotation(DoorRotation);
 
 	// The way I did it:
@@ -77,6 +69,7 @@ void UOpenDoor::OpenDoor(float DeltaTime)
 	// returns a normalized rotation that ranges form -180 to 180. When an actor's rotation goes above 180 degrees, 
 	// such as 181, instead of returning 181 it returns -180
 	CurrentYaw = GetOwner()->GetActorRotation().GetDenormalized().Yaw;
+	//UE_LOG(LogTemp, Warning, TEXT("Current Door Yaw: %f"), CurrentYaw);
 	FRotator DoorRotation(0.f, FMath::Lerp(CurrentYaw, OpenAngle, DoorOpenSpeed * DeltaTime), 0.f);
 	GetOwner()->SetActorRotation(DoorRotation);
 }
@@ -84,6 +77,7 @@ void UOpenDoor::OpenDoor(float DeltaTime)
 void UOpenDoor::CloseDoor(float DeltaTime)
 {
 	CurrentYaw = GetOwner()->GetActorRotation().GetDenormalized().Yaw;
+	//UE_LOG(LogTemp, Warning, TEXT("Current Door Yaw: %f"), CurrentYaw);
 	FRotator DoorRotation(0.f, FMath::Lerp(CurrentYaw, InitialYaw, DoorCloseSpeed * DeltaTime), 0.f);
 	GetOwner()->SetActorRotation(DoorRotation);
 }
@@ -107,7 +101,7 @@ float UOpenDoor::TotalMassOfActors() const
 			*ActorPointer->GetName(),
 			ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass());
 	}
-
+	UE_LOG(LogTemp, Warning, TEXT("Total Mass: %f"), TotalMass);
 	return TotalMass;
 }
 

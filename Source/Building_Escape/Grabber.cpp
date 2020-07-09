@@ -4,6 +4,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
 
 #define OUT
 
@@ -29,6 +30,7 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	//#Debug: Draws a green line to visualize the grab reach raycast
 	//DrawDebugLineTrace();
 
+	if (!PhysicsHandle) { return; }
 	if (PhysicsHandle->GrabbedComponent) // If the physics handle is attached
 	{
 		// Move the grabbed object
@@ -40,7 +42,7 @@ void UGrabber::FindPhysicsHandle() // Find physics handle component attached to 
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 
-	if (PhysicsHandle == nullptr)
+	if (!PhysicsHandle)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s is missing a physics handle component"), *GetOwner()->GetName());
 	}
@@ -53,8 +55,12 @@ void UGrabber::Grab()
 	FHitResult HitResult = GetFirstPhysicsBodyInReach();
 	UPrimitiveComponent* ComponentToGrab = HitResult.GetComponent();
 
-	if (HitResult.GetActor()) // If something is hit, attach the physics handle
+	if (ComponentToGrab) // If a component is hit, attach the physics handle. Avoids trying to grab the component of a null component pointer
 	{
+		// #Debug
+		UE_LOG(LogTemp, Warning, TEXT("(component) %s of (actor) %s was hit"), *HitResult.GetComponent()->GetName(), *HitResult.GetActor()->GetName());
+
+		if (!PhysicsHandle) { return; }
 		PhysicsHandle->GrabComponentAtLocation
 		(
 			ComponentToGrab,
@@ -67,12 +73,13 @@ void UGrabber::Grab()
 void UGrabber::GrabRelease()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("grab key released"));
-
+	if (!PhysicsHandle) { return; }
 	PhysicsHandle->ReleaseComponent();
 }
 
 void UGrabber::SetupInputComponent()
 {
+	// Find the Input component from Actor.h
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputComponent)
 	{
