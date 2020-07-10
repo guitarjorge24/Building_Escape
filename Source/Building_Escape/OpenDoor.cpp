@@ -66,7 +66,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		OpenDoor(DeltaTime);
 		DoorLastOpened = GetWorld()->GetTimeSeconds();
 
-		if (!AudioComponent->IsPlaying() && !DoorIsOpenOrOpening)
+		if (/*!AudioComponent->IsPlaying() &&*/ !DoorIsOpenOrOpening) // We don't really need to wait until the sound is not playing to play it again since it only plays once upon door movement state change
 		{
 			AudioComponent->Play();
 			DoorIsOpenOrOpening = true;
@@ -78,7 +78,9 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		{
 			CloseDoor(DeltaTime);
 
-			if (!AudioComponent->IsPlaying() && DoorIsOpenOrOpening)
+			if (/*AudioComponent->IsPlaying() || */ !DoorIsOpenOrOpening) { return; }
+
+			if(CurrentYaw < InitialYaw + 10.f) //Play sound only when door is almost closed. 10.f is an offset since the door's yaw slows down towards the end due to using exponential lerping
 			{
 				AudioComponent->Play();
 				DoorIsOpenOrOpening = false;
