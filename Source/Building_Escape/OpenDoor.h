@@ -19,16 +19,20 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void OpenDoor(float DeltaTime);
 	void CloseDoor(float DeltaTime);
 	float TotalMassOfActors() const;
+	void FindAudioComponent();
+	void CheckIfPressurePlateIsSet();
 
 private:
 	float InitialYaw;
 	float CurrentYaw;
+	bool DoorIsOpenOrOpening = false;
 
 	UPROPERTY(EditAnywhere)
 	float MassToOpenDoor = 70.f;
@@ -53,5 +57,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	AActor* ActorThatOpens = nullptr;
 
-
+	UPROPERTY()
+	UAudioComponent* AudioComponent = nullptr;
 };

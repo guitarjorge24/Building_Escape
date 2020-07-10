@@ -1,6 +1,7 @@
 // Copyright Jorge Luque 2020 All Rights Reserved
 
 #include "OpenDoor.h"
+#include "Components/AudioComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/TriggerVolume.h"
 #include "Engine/World.h" 
@@ -24,15 +25,34 @@ void UOpenDoor::BeginPlay()
 	CurrentYaw = InitialYaw;
 	OpenAngle += InitialYaw;
 
-	if (!PressurePlate)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s has the OpenDoor component but no pressure plate is set!"), *GetOwner()->GetName());
-	}
+	CheckIfPressurePlateIsSet();
+	FindAudioComponent();
 
 	// Set the actor that will trigger the opening of the door
 	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
+void UOpenDoor::CheckIfPressurePlateIsSet()
+{
+	if (!PressurePlate)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s has the OpenDoor component but no pressure plate is set!"), *GetOwner()->GetName());
+	}
+}
+
+void UOpenDoor::FindAudioComponent()
+{
+	AudioComponent = GetOwner()->FindComponentByClass<UAudioComponent>();
+	if (!AudioComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s is missing audio component."), *GetOwner()->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s has audio component."), *GetOwner()->GetName());
+	}
+
+}
 
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -41,19 +61,30 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// Check if PressurePlate is null before trying to dereference it to avoid crash.
 	// Trying to dereference a null pointer will likely result in a crash.
 	//if (PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens)) // Old way of opening door when a specific actor steps on the pressure plate
-	if(PressurePlate && TotalMassOfActors() > MassToOpenDoor)
+	if (PressurePlate && TotalMassOfActors() > MassToOpenDoor)
 	{
 		OpenDoor(DeltaTime);
 		DoorLastOpened = GetWorld()->GetTimeSeconds();
+
+		if (!AudioComponent->IsPlaying() && !DoorIsOpenOrOpening)
+		{
+			AudioComponent->Play();
+			DoorIsOpenOrOpening = true;
+		}
 	}
 	else
 	{
 		if (GetWorld()->GetTimeSeconds() - DoorLastOpened > DoorCloseDelay)
 		{
 			CloseDoor(DeltaTime);
+
+			if (!AudioComponent->IsPlaying() && DoorIsOpenOrOpening)
+			{
+				AudioComponent->Play();
+				DoorIsOpenOrOpening = false;
+			}
 		}
 	}
-
 }
 
 void UOpenDoor::OpenDoor(float DeltaTime)
@@ -91,17 +122,17 @@ float UOpenDoor::TotalMassOfActors() const
 	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
 
 	// Add up all their masses
-	for (AActor* ActorPointer: OverlappingActors)
+	for (AActor* ActorPointer : OverlappingActors)
 	{
 		TotalMass += ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass();
-		
+
 		// #Debug: Log the mass of what's on the pressure plate
-		UE_LOG(LogTemp, Warning, TEXT("%s from %s has a mass of %f kg"), 
-			*ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetName(),
-			*ActorPointer->GetName(),
-			ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass());
+		//UE_LOG(LogTemp, Warning, TEXT("%s from %s has a mass of %f kg"),
+		//	*ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetName(),
+		//	*ActorPointer->GetName(),
+		//	ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass());
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Total Mass: %f"), TotalMass);
+	//UE_LOG(LogTemp, Warning, TEXT("Total Mass: %f"), TotalMass);
 	return TotalMass;
 }
 

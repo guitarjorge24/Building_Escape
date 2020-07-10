@@ -25,7 +25,9 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	float GrabReachDistance = 200.f;
+	UPROPERTY()
 	class UPhysicsHandleComponent* PhysicsHandle = nullptr;
+	UPROPERTY()
 	UInputComponent* InputComponent = nullptr;
 
 	void FindPhysicsHandle();
