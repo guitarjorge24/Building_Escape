@@ -6,9 +6,11 @@
 #include "Engine/TriggerVolume.h"
 #include "Engine/World.h" 
 #include "GameFramework/Actor.h"
+#include "GameFramework/Character.h" 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
-
 #define OUT
+DEFINE_LOG_CATEGORY(MyCustomLogCategory);
 
 UOpenDoor::UOpenDoor()
 {
@@ -20,6 +22,8 @@ UOpenDoor::UOpenDoor()
 
 void UOpenDoor::BeginPlay()
 {
+	UE_LOG(MyCustomLogCategory, Error, TEXT("test using custom log category"));
+
 	Super::BeginPlay();
 	InitialYaw = GetOwner()->GetActorRotation().Yaw;
 	CurrentYaw = InitialYaw;
@@ -124,13 +128,25 @@ float UOpenDoor::TotalMassOfActors() const
 	// Add up all their masses
 	for (AActor* ActorPointer : OverlappingActors)
 	{
-		TotalMass += ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		if (ActorPointer == ActorThatOpens)
+		{
+			TotalMass += Cast<ACharacter>(ActorPointer)->GetCharacterMovement()->Mass;
+			// #Debug: Log the mass of what's on the pressure plate
+			//UE_LOG(LogTemp, Warning, TEXT("%s from %s has a mass of %f kg"),
+			//	   *ActorPointer->FindComponentByClass<UCharacterMovementComponent>()->GetName(),
+			//	   *ActorPointer->GetName(),
+			//	   Cast<ACharacter>(ActorPointer)->GetCharacterMovement()->Mass);
+		}
+		else
+		{
+			TotalMass += ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+			// #Debug: Log the mass of what's on the pressure plate
+			//UE_LOG(LogTemp, Warning, TEXT("%s from %s has a mass of %f kg"),
+			//	   *ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetName(),
+			//	   *ActorPointer->GetName(),
+			//	   ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass());
+		}
 
-		// #Debug: Log the mass of what's on the pressure plate
-		//UE_LOG(LogTemp, Warning, TEXT("%s from %s has a mass of %f kg"),
-		//	*ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetName(),
-		//	*ActorPointer->GetName(),
-		//	ActorPointer->FindComponentByClass<UPrimitiveComponent>()->GetMass());
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("Total Mass: %f"), TotalMass);
 	return TotalMass;
